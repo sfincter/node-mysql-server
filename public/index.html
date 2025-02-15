@@ -1,15 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Добавление записи</title>
 </head>
 <body>
-    <div class="container">
-        <div class="row">
-            <h1>Hi + from nodejs</h1>
-        </div>
-    </div>
+    <h1>Добавить запись</h1>
+    <form id="nameForm">
+        <input type="text" id="name" placeholder="Введите имя" required />
+        <button type="submit">Добавить</button>
+    </form>
+
+    <h2>Список записей</h2>
+    <ul id="recordsList">
+        <!-- Здесь будут отображаться записи -->
+    </ul>
+
+    <script>
+        // Обработчик отправки формы
+        document.getElementById('nameForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            if (name) {
+                fetch('/addRecord', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadRecords();
+                    }
+                });
+            }
+        });
+
+        // Функция для загрузки списка записей
+        function loadRecords() {
+            fetch('/getRecords')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('recordsList');
+                    list.innerHTML = '';
+                    data.records.forEach(record => {
+                        const li = document.createElement('li');
+                        li.textContent = record.name;
+                        list.appendChild(li);
+                    });
+                });
+        }
+
+        // Загружаем записи при старте страницы
+        window.onload = loadRecords;
+    </script>
 </body>
 </html>

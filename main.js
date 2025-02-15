@@ -24,10 +24,36 @@ db.connect(err => {
 
 // Раздача статических файлов
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json()); // Для парсинга JSON в теле запроса
 
 // Главная страница
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Маршрут для добавления записи
+app.post('/addRecord', (req, res) => {
+    const { name } = req.body;
+    const query = 'INSERT INTO records (name) VALUES (?)';
+    db.query(query, [name], (err, result) => {
+        if (err) {
+            console.error('Ошибка добавления записи:', err);
+            return res.status(500).json({ success: false });
+        }
+        res.json({ success: true });
+    });
+});
+
+// Маршрут для получения списка записей
+app.get('/getRecords', (req, res) => {
+    const query = 'SELECT * FROM records';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Ошибка получения записей:', err);
+            return res.status(500).json({ success: false });
+        }
+        res.json({ records: results });
+    });
 });
 
 // Запуск сервера
