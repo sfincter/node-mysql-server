@@ -3,84 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Добавление записи</title>
+    <title>Регистрация и Авторизация</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Добавить запись</h1>
-    <form id="nameForm">
-        <input type="text" id="name" placeholder="Введите имя" required />
-        <button type="submit">Добавить</button>
-    </form>
+    <div class="container">
+        <h1>Регистрация и Авторизация</h1>
 
-    <h2>Список записей</h2>
-    <ul id="recordsList">
-        <!-- Здесь будут отображаться записи -->
-    </ul>
+        <!-- Форма авторизации -->
+        <div id="loginForm">
+            <h2>Авторизация</h2>
+            <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
+            <input type="password" id="loginPassword" placeholder="Пароль" required>
+            <button onclick="login()">Войти</button>
+            <p>Нет аккаунта? <a href="#" onclick="showRegisterForm()">Зарегистрируйтесь</a></p>
+        </div>
 
-    <script>
-        // Обработчик отправки формы
-        document.getElementById('nameForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('name').value;
-            if (name) {
-                fetch('/addRecord', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        loadRecords();
-                    }
-                });
-            }
-        });
+        <!-- Форма регистрации -->
+        <div id="registerForm" style="display: none;">
+            <h2>Регистрация</h2>
+            <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
+            <input type="password" id="registerPassword" placeholder="Пароль" required>
+            <button onclick="register()">Зарегистрироваться</button>
+            <p>Уже есть аккаунт? <a href="#" onclick="showLoginForm()">Войдите</a></p>
+        </div>
 
-        // Функция для загрузки списка записей
-        function loadRecords() {
-            fetch('/getRecords')
-                .then(response => response.json())
-                .then(data => {
-                    const list = document.getElementById('recordsList');
-                    list.innerHTML = '';
-                    data.records.forEach(record => {
-                        const li = document.createElement('li');
-                        li.textContent = record.name;
-                        
-                        // Создаем кнопку для удаления
-                        const deleteButton = document.createElement('button');
-                        deleteButton.textContent = 'Удалить';
-                        deleteButton.addEventListener('click', function() {
-                            deleteRecord(record.id);
-                        });
+        <!-- Сообщения об ошибках или успешной авторизации -->
+        <p id="errorMessage" class="error-message"></p>
 
-                        // Добавляем кнопку удаления к записи
-                        li.appendChild(deleteButton);
-                        list.appendChild(li);
-                    });
-                });
-        }
+        <!-- Выход -->
+        <div id="welcomeMessage" style="display: none;">
+            <h2>Добро пожаловать!</h2>
+            <button onclick="logout()">Выйти</button>
+        </div>
+    </div>
 
-        // Функция для удаления записи
-        function deleteRecord(id) {
-            fetch(`/deleteRecord/${id}`, {
-                method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadRecords(); // Перезагружаем список записей
-                } else {
-                    console.error('Ошибка удаления:', data.error);
-                }
-            });
-        }
-
-        // Загружаем записи при старте страницы
-        window.onload = loadRecords;
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

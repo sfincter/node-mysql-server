@@ -20,6 +20,7 @@ async function register() {
     if (data.success) {
         showError('');
         alert('Регистрация успешна! Теперь можете войти.');
+        showLoginForm(); // После регистрации показываем форму логина
     } else {
         showError(data.message || 'Ошибка регистрации.');
     }
@@ -70,6 +71,30 @@ function showWelcomeMessage() {
 function logout() {
     localStorage.removeItem('token');
     document.getElementById('welcomeMessage').style.display = 'none';
-    document.getElementById('loginForm').style.display = 'block';
+    showLoginForm(); // После выхода снова показываем форму логина
+}
+
+// Функция для отображения формы регистрации
+function showRegisterForm() {
+    document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'block';
 }
+
+// Функция для отображения формы логина
+function showLoginForm() {
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+}
+
+// Проверка, если пользователь уже авторизован
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        showWelcomeMessage(); // Если токен есть, показываем приветственное сообщение
+    } else {
+        showLoginForm(); // Если нет токена, показываем форму логина
+    }
+}
+
+// Запуск проверки авторизации при загрузке страницы
+window.onload = checkAuth;
