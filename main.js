@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 // Подключение к MySQL
 const db = mysql.createConnection({
-    host: 'interchange.proxy.rlwy.net',
+    host: 'mysql.railway.internal',
     user: 'root',
     password: 'LuqNCXZMEiHtvCZQWvjXMjJXkMndbCGH',
     database: 'railway'
