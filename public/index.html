@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>Добавить запись</h1>
-    <form id="nameForm" method="POST">
+    <form id="nameForm">
         <input type="text" id="name" placeholder="Введите имя" required />
         <button type="submit">Добавить</button>
     </form>
@@ -49,9 +49,34 @@
                     data.records.forEach(record => {
                         const li = document.createElement('li');
                         li.textContent = record.name;
+                        
+                        // Создаем кнопку для удаления
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Удалить';
+                        deleteButton.addEventListener('click', function() {
+                            deleteRecord(record.id);
+                        });
+
+                        // Добавляем кнопку удаления к записи
+                        li.appendChild(deleteButton);
                         list.appendChild(li);
                     });
                 });
+        }
+
+        // Функция для удаления записи
+        function deleteRecord(id) {
+            fetch(`/deleteRecord/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadRecords(); // Перезагружаем список записей
+                } else {
+                    console.error('Ошибка удаления:', data.error);
+                }
+            });
         }
 
         // Загружаем записи при старте страницы

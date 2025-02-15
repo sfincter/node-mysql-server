@@ -72,6 +72,28 @@ app.get('/getRecords', (req, res) => {
     });
 });
 
+
+// Маршрут для удаления записи
+app.delete('/deleteRecord/:id', (req, res) => {
+    const { id } = req.params;
+
+    const query = 'DELETE FROM records WHERE id = ?';
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Ошибка при удалении записи:', err);
+            return res.status(500).json({ success: false, error: err.message });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, error: 'Запись не найдена' });
+        }
+
+        console.log('Запись удалена, ID:', id);
+        res.json({ success: true });
+    });
+});
+
+
 // Запуск сервера
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);
