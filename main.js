@@ -11,7 +11,7 @@ mysql://root:LuqNCXZMEiHtvCZQWvjXMjJXkMndbCGH@interchange.proxy.rlwy.net:44057/r
 
 
 // Подключение к MySQL
-var db = mysql.createConnection({
+const db = mysql.createConnection({
     host: 'interchange.proxy.rlwy.net',
     user: 'root',
     password: 'LuqNCXZMEiHtvCZQWvjXMjJXkMndbCGH',
