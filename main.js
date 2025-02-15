@@ -1,15 +1,13 @@
 const express = require('express');
 const mysql = require('mysql2');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const cors = require('cors');
-app.use(cors());
-
-// Подключение к MySQL
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -25,79 +23,88 @@ db.connect(err => {
     console.log('Подключено к MySQL');
 });
 
-// Раздача статических файлов
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json()); // Для парсинга JSON в теле запроса
 
-// Главная страница
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Функция для создания JWT
+const generateToken = (userId) => {
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+};
 
-// Маршрут для добавления записи
-app.post('/addRecord', (req, res) => {
-    const { name } = req.body;
+// Маршрут для регистрации пользователя
+app.post('/register', (req, res) => {
+    const { username, password } = req.body;
 
-    // Логируем полученное имя
-    console.log('Получено имя:', name);
-
-    // Проверяем, что имя не пустое
-    if (!name) {
-        console.error('Имя не передано');
-        return res.status(400).json({ success: false, error: 'Имя не передано' });
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Username and password are required' });
     }
 
-    const query = 'INSERT INTO records (name) VALUES (?)';
+    const hashedPassword = bcrypt.hashSync(password, 10);
 
-    db.query(query, [name], (err, result) => {
+    const query = 'INSERT INTO users (username, password) VALUES (?, ?)';
+    db.query(query, [username, hashedPassword], (err, result) => {
         if (err) {
-            console.error('Ошибка при добавлении записи:', err); // Логируем ошибку
-            return res.status(500).json({ success: false, error: err.message });
+            console.error('Ошибка регистрации:', err);
+            return res.status(500).json({ message: 'Server error' });
         }
-        console.log('Запись успешно добавлена, ID:', result.insertId);
-        res.json({ success: true });
+        const token = generateToken(result.insertId);
+        res.status(201).json({ success: true, token });
     });
 });
 
+// Маршрут для авторизации пользователя
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
 
-// Маршрут для получения списка записей
-app.get('/getRecords', (req, res) => {
-    const query = 'SELECT * FROM records';
-    db.query(query, (err, results) => {
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Username and password are required' });
+    }
+
+    const query = 'SELECT * FROM users WHERE username = ?';
+    db.query(query, [username], (err, result) => {
         if (err) {
-            console.error('Ошибка получения записей:', err);
-            return res.status(500).json({ success: false });
+            console.error('Ошибка авторизации:', err);
+            return res.status(500).json({ message: 'Server error' });
         }
-        res.json({ records: results });
+
+        if (result.length === 0) {
+            return res.status(400).json({ message: 'User not found' });
+        }
+
+        const user = result[0];
+        const isPasswordCorrect = bcrypt.compareSync(password, user.password);
+        if (!isPasswordCorrect) {
+            return res.status(400).json({ message: 'Invalid password' });
+        }
+
+        const token = generateToken(user.id);
+        res.json({ success: true, token });
     });
 });
 
+// Middleware для проверки токена
+const authenticate = (req, res, next) => {
+    const token = req.headers['authorization'];
 
-// Маршрут для удаления записи
-app.delete('/deleteRecord/:id', (req, res) => {
-    const { id } = req.params;
+    if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+    }
 
-    const query = 'DELETE FROM records WHERE id = ?';
-    db.query(query, [id], (err, result) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            console.error('Ошибка при удалении записи:', err);
-            return res.status(500).json({ success: false, error: err.message });
+            return res.status(401).json({ message: 'Invalid token' });
         }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, error: 'Запись не найдена' });
-        }
-
-        console.log('Запись удалена, ID:', id);
-        res.json({ success: true });
+        req.userId = decoded.userId;
+        next();
     });
-});
+};
 
+// Пример защищенного маршрута
+app.get('/protected', authenticate, (req, res) => {
+    res.json({ message: 'This is a protected route', userId: req.userId });
+});
 
 // Запуск сервера
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);
 });
-
-// Поддержка Railway
-module.exports = app;

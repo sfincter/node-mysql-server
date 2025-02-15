@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация и Авторизация</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Регистрация и Авторизация</h1>
+
+        <!-- Форма регистрации -->
+        <div id="registerForm">
+            <h2>Регистрация</h2>
+            <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
+            <input type="password" id="registerPassword" placeholder="Пароль" required>
+            <button onclick="register()">Зарегистрироваться</button>
+        </div>
+
+        <!-- Форма авторизации -->
+        <div id="loginForm">
+            <h2>Авторизация</h2>
+            <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
+            <input type="password" id="loginPassword" placeholder="Пароль" required>
+            <button onclick="login()">Войти</button>
+        </div>
+
+        <!-- Сообщения об ошибках или успешной авторизации -->
+        <p id="errorMessage" class="error-message"></p>
+
+        <!-- Выход -->
+        <div id="welcomeMessage" style="display: none;">
+            <h2>Добро пожаловать!</h2>
+            <button onclick="logout()">Выйти</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
