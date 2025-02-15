@@ -6,9 +6,6 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-mysql://root:LuqNCXZMEiHtvCZQWvjXMjJXkMndbCGH@interchange.proxy.rlwy.net:44057/railway
-
-
 
 // Подключение к MySQL
 const db = mysql.createConnection({
