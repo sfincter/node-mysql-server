@@ -6,21 +6,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
-require('dotenv').config();
-
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
-console.log('DB_NAME:', process.env.DB_NAME);
-
-
 // Подключение к MySQL
 const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    host: 'interchange.proxy.rlwy.net',
+    user: 'root',
+    password: 'LuqNCXZMEiHtvCZQWvjXMjJXkMndbCGH',
+    database: 'railway'
 });
 
 db.connect(err => {
@@ -40,7 +31,6 @@ app.get('/', (req, res) => {
 });
 
 // Запуск сервера
-console.log('Приложение успешно стартовало'); // Эта строка должна появиться в консоли
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);
 });
