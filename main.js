@@ -37,15 +37,28 @@ app.get('/', (req, res) => {
 // Маршрут для добавления записи
 app.post('/addRecord', (req, res) => {
     const { name } = req.body;
+
+    // Логируем полученное имя
+    console.log('Получено имя:', name);
+
+    // Проверяем, что имя не пустое
+    if (!name) {
+        console.error('Имя не передано');
+        return res.status(400).json({ success: false, error: 'Имя не передано' });
+    }
+
     const query = 'INSERT INTO records (name) VALUES (?)';
+
     db.query(query, [name], (err, result) => {
         if (err) {
-            console.error('Ошибка добавления записи:', err);
-            return res.status(500).json({ success: false });
+            console.error('Ошибка при добавлении записи:', err); // Логируем ошибку
+            return res.status(500).json({ success: false, error: err.message });
         }
+        console.log('Запись успешно добавлена, ID:', result.insertId);
         res.json({ success: true });
     });
 });
+
 
 // Маршрут для получения списка записей
 app.get('/getRecords', (req, res) => {
