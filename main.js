@@ -34,18 +34,32 @@ app.post('/register', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Заполните все поля!' });
     }
 
-    // Хешируем пароль перед сохранением в БД
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const query = 'INSERT INTO users (username, password) VALUES (?, ?)';
-    db.query(query, [username, hashedPassword], (err, result) => {
+    // Проверка на существование пользователя с таким именем
+    const queryCheckUser = 'SELECT * FROM users WHERE username = ?';
+    db.query(queryCheckUser, [username], async (err, results) => {
         if (err) {
-            console.error('Ошибка при добавлении пользователя:', err);
+            console.error('Ошибка при проверке существующего пользователя:', err);
             return res.status(500).json({ success: false, message: 'Ошибка регистрации.' });
         }
-        res.json({ success: true });
+
+        if (results.length > 0) {
+            return res.status(400).json({ success: false, message: 'Пользователь с таким именем уже существует.' });
+        }
+
+        // Хешируем пароль перед сохранением в БД
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const queryInsertUser = 'INSERT INTO users (username, password) VALUES (?, ?)';
+        db.query(queryInsertUser, [username, hashedPassword], (err, result) => {
+            if (err) {
+                console.error('Ошибка при добавлении пользователя:', err);
+                return res.status(500).json({ success: false, message: 'Ошибка регистрации.' });
+            }
+            res.json({ success: true });
+        });
     });
 });
+
 
 // Авторизация пользователя
 app.post('/login', (req, res) => {

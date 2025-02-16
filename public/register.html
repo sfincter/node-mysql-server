@@ -22,37 +22,36 @@
     </div>
 
     <script>
-        // Проверка авторизации при загрузке страницы
-        window.onload = function() {
-            const token = localStorage.getItem('token');
-            if (token) {
-                window.location.href = '/'; // Если пользователь залогинен, редирект на главную
-            }
-        };
-
-        // Обработчик регистрации
-        document.getElementById('registerForm').addEventListener('submit', async (event) => {
+        document.getElementById('register-form').addEventListener('submit', async function (event) {
             event.preventDefault();
-
+    
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                alert('Регистрация успешна! Теперь можете войти.');
-                window.location.href = '/login'; // Перенаправление на страницу логина
-            } else {
-                alert(data.message || 'Ошибка регистрации.');
+    
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+    
+                const data = await response.json();
+    
+                if (data.success) {
+                    // Если регистрация прошла успешно, перенаправляем на страницу логина
+                    window.location.href = '/login';
+                } else {
+                    // Если ошибка, выводим сообщение
+                    alert('Ошибка: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Ошибка при отправке запроса:', error);
+                alert('Произошла ошибка при попытке зарегистрироваться. Попробуйте снова.');
             }
         });
     </script>
+    
 </body>
 </html>
