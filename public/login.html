@@ -21,29 +21,36 @@
     <script>
         document.getElementById('login-form').addEventListener('submit', async function (event) {
             event.preventDefault();
-
+    
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Если вход успешен, перенаправляем на главную страницу
-                alert('Вы успешно вошли!');
-                window.location.href = '/';
-            } else {
-                // Если произошла ошибка
-                alert('Ошибка: ' + data.message);
+    
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+    
+                const data = await response.json();
+    
+                if (data.success) {
+                    // Сохраняем токен в localStorage
+                    localStorage.setItem('token', data.token);
+                    // Перенаправляем на главную страницу пользователя
+                    window.location.href = '/dashboard.html';
+                } else {
+                    // Если произошла ошибка
+                    alert('Ошибка: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Ошибка при отправке запроса:', error);
+                alert('Произошла ошибка при попытке войти в систему. Попробуйте снова.');
             }
         });
     </script>
+    
 </body>
 </html>
