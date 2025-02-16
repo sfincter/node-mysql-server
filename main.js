@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const path = require('path'); // Добавим для работы с путями
 require('dotenv').config();
 
 const app = express();
@@ -103,7 +104,12 @@ app.get('/', verifyToken, (req, res) => {
 
 // Страница регистрации
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+    try {
+        res.sendFile(path.join(__dirname, 'public', 'register.html')); // Убедитесь, что файл существует
+    } catch (err) {
+        console.error('Ошибка при отправке страницы регистрации:', err);
+        res.status(500).send('Ошибка сервера');
+    }
 });
 
 // Запуск сервера
