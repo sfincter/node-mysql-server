@@ -79,13 +79,6 @@ app.post('/login', (req, res) => {
     });
 });
 
-
-// Страница после успешного входа
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));  // Страница пользователя после входа
-});
-
-
 // Страница входа
 app.get('/login', (req, res) => {
     try {
