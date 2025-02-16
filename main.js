@@ -1,74 +1,74 @@
 const express = require('express');
-const mysql = require('mysql2/promise'); // Используем promise-версию MySQL
+const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const path = require('path');
+const path = require('path');  // Для работы с путями файлов
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json()); // Для парсинга JSON в теле запроса
 
 // Подключение к MySQL
-let db;
-(async () => {
-    try {
-        db = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME
-        });
-        console.log('Подключено к MySQL');
-    } catch (err) {
+const db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+});
+
+db.connect(err => {
+    if (err) {
         console.error('Ошибка подключения к MySQL:', err);
-        process.exit(1); // Остановить сервер при неудачном подключении
+        return;
     }
-})();
+    console.log('Подключено к MySQL');
+});
 
 // Регистрация пользователя
 app.post('/register', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        if (!username || !password) {
-            return res.status(400).json({ success: false, message: 'Заполните все поля!' });
-        }
+    const { username, password } = req.body;
 
-        // Проверяем, существует ли пользователь
-        const [existingUsers] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
-        if (existingUsers.length > 0) {
-            return res.status(400).json({ success: false, message: 'Такой пользователь уже существует!' });
-        }
-
-        // Хешируем пароль перед сохранением в БД
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await db.execute('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword]);
-
-        res.json({ success: true, message: 'Пользователь зарегистрирован!' });
-    } catch (err) {
-        console.error('Ошибка при регистрации:', err);
-        res.status(500).json({ success: false, message: 'Ошибка регистрации.' });
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Заполните все поля!' });
     }
+
+    // Хешируем пароль перед сохранением в БД
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const query = 'INSERT INTO users (username, password) VALUES (?, ?)';
+    db.query(query, [username, hashedPassword], (err, result) => {
+        if (err) {
+            console.error('Ошибка при добавлении пользователя:', err);
+            return res.status(500).json({ success: false, message: 'Ошибка регистрации.' });
+        }
+        res.json({ success: true });
+    });
 });
 
 // Авторизация пользователя
-app.post('/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        if (!username || !password) {
-            return res.status(400).json({ success: false, message: 'Заполните все поля!' });
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Заполните все поля!' });
+    }
+
+    const query = 'SELECT * FROM users WHERE username = ?';
+    db.query(query, [username], async (err, results) => {
+        if (err) {
+            console.error('Ошибка при авторизации:', err);
+            return res.status(500).json({ success: false, message: 'Ошибка авторизации.' });
         }
 
-        // Проверяем, есть ли пользователь в базе
-        const [users] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
-        if (users.length === 0) {
+        if (results.length === 0) {
             return res.status(400).json({ success: false, message: 'Пользователь не найден.' });
         }
 
-        const user = users[0];
+        const user = results[0];
         const isPasswordValid = await bcrypt.compare(password, user.password);
+
         if (!isPasswordValid) {
             return res.status(400).json({ success: false, message: 'Неверный пароль.' });
         }
@@ -77,20 +77,39 @@ app.post('/login', async (req, res) => {
         const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.json({ success: true, token });
+    });
+});
+
+
+// Страница после успешного входа
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));  // Страница пользователя после входа
+});
+
+
+// Страница входа
+app.get('/login', (req, res) => {
+    try {
+        res.sendFile(path.join(__dirname, 'public', 'login.html')); // Путь к файлу с формой логина
     } catch (err) {
-        console.error('Ошибка при авторизации:', err);
-        res.status(500).json({ success: false, message: 'Ошибка авторизации.' });
+        console.error('Ошибка при отправке страницы логина:', err);
+        res.status(500).send('Ошибка сервера');
     }
 });
 
-// Главная страница (по умолчанию login.html)
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+// Страница регистрации
+app.get('/register', (req, res) => {
+    try {
+        res.sendFile(path.join(__dirname, 'public', 'register.html')); // Путь к файлу с формой регистрации
+    } catch (err) {
+        console.error('Ошибка при отправке страницы регистрации:', err);
+        res.status(500).send('Ошибка сервера');
+    }
 });
 
-// Страница пользователя (dashboard)
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+// Главная страница (проверка авторизации)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Запуск сервера
