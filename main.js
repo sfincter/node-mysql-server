@@ -2,7 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const path = require('path'); // Добавим для работы с путями
+const path = require('path');  // Для работы с путями файлов
 require('dotenv').config();
 
 const app = express();
@@ -80,36 +80,29 @@ app.post('/login', (req, res) => {
     });
 });
 
-// Middleware для проверки токена
-function verifyToken(req, res, next) {
-    const token = req.headers['authorization'];
-
-    if (!token) {
-        return res.redirect('/register');  // Если нет токена, перенаправляем на страницу регистрации
+// Страница входа
+app.get('/login', (req, res) => {
+    try {
+        res.sendFile(path.join(__dirname, 'public', 'login.html')); // Путь к файлу с формой логина
+    } catch (err) {
+        console.error('Ошибка при отправке страницы логина:', err);
+        res.status(500).send('Ошибка сервера');
     }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ success: false, message: 'Недействительный токен.' });
-        }
-        req.user = decoded;
-        next();
-    });
-}
-
-// Главная страница (проверка авторизации)
-app.get('/', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Страница регистрации
 app.get('/register', (req, res) => {
     try {
-        res.sendFile(path.join(__dirname, 'public', 'register.html')); // Убедитесь, что файл существует
+        res.sendFile(path.join(__dirname, 'public', 'register.html')); // Путь к файлу с формой регистрации
     } catch (err) {
         console.error('Ошибка при отправке страницы регистрации:', err);
         res.status(500).send('Ошибка сервера');
     }
+});
+
+// Главная страница (проверка авторизации)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Запуск сервера
