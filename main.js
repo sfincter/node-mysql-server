@@ -75,7 +75,6 @@ app.post('/login', (req, res) => {
 
         // Генерация JWT-токена
         const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
         res.json({ success: true, token });
     });
 });
@@ -98,6 +97,7 @@ app.get('/login', (req, res) => {
 });
 
 
+// Проверка авторизации на сервере
 const authMiddleware = (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -111,6 +111,8 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
+
+// Роут для dashboard
 app.get('/dashboard', authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
