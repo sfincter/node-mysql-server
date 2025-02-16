@@ -79,6 +79,33 @@ app.post('/login', (req, res) => {
     });
 });
 
+// Middleware для проверки токена
+function verifyToken(req, res, next) {
+    const token = req.headers['authorization'];
+
+    if (!token) {
+        return res.redirect('/register');  // Если нет токена, перенаправляем на страницу регистрации
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ success: false, message: 'Недействительный токен.' });
+        }
+        req.user = decoded;
+        next();
+    });
+}
+
+// Главная страница (проверка авторизации)
+app.get('/', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Страница регистрации
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
 // Запуск сервера
 app.listen(PORT, () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);

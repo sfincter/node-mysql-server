@@ -3,41 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация и Авторизация</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Регистрация</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Регистрация и Авторизация</h1>
-
-        <!-- Форма авторизации -->
-        <div id="loginForm">
-            <h2>Авторизация</h2>
-            <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
-            <input type="password" id="loginPassword" placeholder="Пароль" required>
-            <button onclick="login()">Войти</button>
-            <p>Нет аккаунта? <a href="#" onclick="showRegisterForm()">Зарегистрируйтесь</a></p>
-        </div>
-
-        <!-- Форма регистрации -->
-        <div id="registerForm" style="display: none;">
-            <h2>Регистрация</h2>
-            <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
-            <input type="password" id="registerPassword" placeholder="Пароль" required>
-            <button onclick="register()">Зарегистрироваться</button>
-            <p>Уже есть аккаунт? <a href="#" onclick="showLoginForm()">Войдите</a></p>
-        </div>
-
-        <!-- Сообщения об ошибках или успешной авторизации -->
-        <p id="errorMessage" class="error-message"></p>
-
-        <!-- Выход -->
-        <div id="welcomeMessage" style="display: none;">
-            <h2>Добро пожаловать!</h2>
-            <button onclick="logout()">Выйти</button>
-        </div>
+    <div>
+        <h2>Регистрация</h2>
+        <form id="registerForm">
+            <input type="text" id="username" placeholder="Имя пользователя" required />
+            <input type="password" id="password" placeholder="Пароль" required />
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+        <p>Уже есть аккаунт? <a href="/login">Войдите</a></p>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        // Проверка авторизации при загрузке страницы
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                window.location.href = '/'; // Если пользователь залогинен, редирект на главную
+            }
+        };
+
+        // Обработчик регистрации
+        document.getElementById('registerForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert('Регистрация успешна! Теперь можете войти.');
+                window.location.href = '/login'; // Перенаправление на страницу логина
+            } else {
+                alert(data.message || 'Ошибка регистрации.');
+            }
+        });
+    </script>
 </body>
 </html>
