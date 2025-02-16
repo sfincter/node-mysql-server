@@ -8,21 +8,26 @@ async function register() {
         return;
     }
 
-    const response = await fetch('/register', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-    });
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
 
-    const data = await response.json();
-    if (data.success) {
-        showError('');
-        alert('Регистрация успешна! Теперь можете войти.');
-        showLoginForm(); // После регистрации показываем форму логина
-    } else {
-        showError(data.message || 'Ошибка регистрации.');
+        const data = await response.json();
+
+        if (data.success) {
+            showError('');
+            alert('Регистрация успешна! Теперь можете войти.');
+        } else {
+            showError(data.message || 'Ошибка регистрации.');
+        }
+    } catch (error) {
+        console.error('Ошибка при отправке запроса на регистрацию:', error);
+        showError('Ошибка соединения с сервером.');
     }
 }
 
